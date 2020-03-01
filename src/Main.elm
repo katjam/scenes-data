@@ -1,9 +1,12 @@
 module Main exposing (main)
 
 import Browser
+import File
+import File.Select
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Task
 
 
 main : Program () Model Msg
@@ -17,29 +20,38 @@ main =
 
 
 type alias Model =
-    { title : String
-    , characters : List String
+    { screenplay : Maybe String
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { title = ""
-      , characters = [ "" ]
-      }
+    ( Model Nothing
     , Cmd.none
     )
 
 
 type Msg
-    = Loaded
+    = ScreenplayRequested
+    | ScreenplaySelected File.File
+    | ScreenplayLoaded String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Loaded ->
-            ( { model | title = "Parse top line" }
+        ScreenplayRequested ->
+            ( model
+            , File.Select.file [ "text/csv" ] ScreenplaySelected
+            )
+
+        ScreenplaySelected file ->
+            ( model
+            , Task.perform ScreenplayLoaded (File.toString file)
+            )
+
+        ScreenplayLoaded content ->
+            ( { model | screenplay = Just content }
             , Cmd.none
             )
 
@@ -56,14 +68,9 @@ viewDocument model =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ if model.title == "" then
-            div [] [ text "Input txt file" ]
+    case model.screenplay of
+        Nothing ->
+            button [ onClick ScreenplayRequested ] [ text "Load Screenplay" ]
 
-          else
-            h2 [] [ text model.title ]
-        , h2 [] [ text "Scene locations" ]
-        , div [] [ text "INFO" ]
-        , h2 [] [ text "Character Names" ]
-        , div [] [ text "INFO" ]
-        ]
+        Just content ->
+            p [ style "white-space" "pre" ] [ text content ]
