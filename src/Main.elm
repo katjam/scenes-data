@@ -6,6 +6,7 @@ import File.Select
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Screenplay
 import Task
 
 
@@ -20,7 +21,7 @@ main =
 
 
 type alias Model =
-    { screenplay : Maybe String
+    { screenplay : Maybe Screenplay.ScreenplayData
     }
 
 
@@ -51,7 +52,7 @@ update msg model =
             )
 
         ScreenplayLoaded content ->
-            ( { model | screenplay = Just content }
+            ( { model | screenplay = Just (Screenplay.parseScreenplay content) }
             , Cmd.none
             )
 
@@ -72,5 +73,10 @@ view model =
         Nothing ->
             button [ onClick ScreenplayRequested ] [ text "Load Screenplay" ]
 
-        Just content ->
-            p [ style "white-space" "pre" ] [ text content ]
+        Just screenplayData ->
+            div []
+                [ p [] [ text screenplayData.title ]
+                , h2 [] [ text "Locations" ]
+                , h2 [] [ text "Characters" ]
+                , p [ style "white-space" "pre" ] [ text screenplayData.text ]
+                ]
