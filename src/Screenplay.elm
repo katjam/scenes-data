@@ -6,7 +6,7 @@ import Parser exposing ((|.), (|=), Parser, chompUntil, chompWhile, end, getChom
 type alias ScreenplayData =
     { title : String
     , characters : List String
-    , locations : List Location
+    , locations : Result (List Parser.DeadEnd) (List String)
     , rawText : String
     }
 
@@ -26,7 +26,7 @@ parseScreenplay : String -> ScreenplayData
 parseScreenplay content =
     { title = "title"
     , characters = [ "" ]
-    , locations = [ { intext = Int, description = "" } ]
+    , locations = Parser.run list content
     , rawText = content
     }
 
@@ -38,9 +38,8 @@ step locations =
             next (location :: locations)
     in
     succeed finish
-        |. keyword "INT"
-        |. symbol "."
-        |. spaces
+        --|. keyword "INT."
+        --|. spaces
         |= zeroOrMore (not << isNewLine)
         |= oneOf
             [ succeed Parser.Loop
