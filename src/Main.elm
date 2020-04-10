@@ -78,5 +78,5 @@ view model =
                 [ p [] [ text screenplayData.title ]
                 , h2 [] [ text "Locations" ]
                 , h2 [] [ text "Characters" ]
-                , p [ style "white-space" "pre" ] [ text screenplayData.text ]
+                , p [ style "white-space" "pre" ] [ text screenplayData.rawText ]
                 ]
