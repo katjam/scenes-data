@@ -6,6 +6,7 @@ import File.Select
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Parser
 import Screenplay
 import Task
 
@@ -74,8 +75,22 @@ view model =
             button [ onClick ScreenplayRequested ] [ text "Load Screenplay" ]
 
         Just screenplayData ->
+            let
+                lines =
+                    case screenplayData.lines of
+                        Ok result ->
+                            result
+                                |> List.map (\loc -> li [] [ text loc ])
+                                |> ul []
+
+                        Err err ->
+                            err
+                                |> List.map (\e -> li [] [ text "Parser problem error" ])
+                                |> ul []
+            in
             div []
-                [ p [] [ text screenplayData.title ]
+                [ div [] [ lines ]
+                , p [] [ text screenplayData.title ]
                 , h2 [] [ text "Locations" ]
                 , h2 [] [ text "Characters" ]
                 , p [ style "white-space" "pre" ] [ text screenplayData.rawText ]

@@ -40,9 +40,7 @@ step lines =
             next (line :: lines)
     in
     succeed finish
-        --|. keyword "INT."
-        --|. spaces
-        |= zeroOrMore (not << isNewLine)
+        |= value
         |= oneOf
             [ succeed Parser.Loop
                 |. symbol "\n"
@@ -54,6 +52,37 @@ step lines =
 list : Parser (List String)
 list =
     loop [] step
+
+
+
+-- Title always the 1st line
+-- Location starts with INT. or EXT.
+-- Page starts with 1. (int + fullstop)
+
+
+value : Parser.Parser String
+value =
+    oneOf
+        [ locationLine
+        , notLocationLine
+        ]
+
+
+locationLine : Parser.Parser String
+locationLine =
+    Parser.succeed identity
+        |. oneOf
+            [ keyword "INT."
+            , keyword "EXT."
+            ]
+        |. spaces
+        |= zeroOrMore (not << isNewLine)
+
+
+notLocationLine : Parser.Parser String
+notLocationLine =
+    Parser.succeed identity
+        |= zeroOrMore (not << isNewLine)
 
 
 zeroOrMore : (Char -> Bool) -> Parser String
