@@ -79,10 +79,10 @@ locationLine =
         |= zeroOrMore (not << isNewLine)
 
 
-notLocationLine : Parser.Parser String
+notLocationLine : Parser String
 notLocationLine =
     Parser.succeed identity
-        |= zeroOrMore (not << isNewLine)
+        |= blank (not << isNewLine)
 
 
 zeroOrMore : (Char -> Bool) -> Parser String
@@ -90,6 +90,12 @@ zeroOrMore isOk =
     succeed ()
         |. chompWhile isOk
         |> getChompedString
+
+
+blank : (Char -> Bool) -> Parser String
+blank isOk =
+    succeed "not scene heading"
+        |. chompWhile isOk
 
 
 isNewLine : Char -> Bool
