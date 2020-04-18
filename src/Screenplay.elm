@@ -1,12 +1,12 @@
 module Screenplay exposing (ScreenplayData, parseScreenplay)
 
-import Breakdown exposing (..)
+import Breakdown
 import Parser exposing ((|.), (|=), Parser, chompUntil, chompWhile, end, getChompedString, keyword, loop, oneOf, spaces, succeed, symbol)
 
 
 type alias ScreenplayData =
     { title : String
-    , lines : Result (List Parser.DeadEnd) (List Element)
+    , lines : Result (List Parser.DeadEnd) (List Breakdown.Element)
     , rawText : String
     }
 
@@ -19,7 +19,7 @@ parseScreenplay content =
     }
 
 
-step : List Element -> Parser (Parser.Step (List Element) (List Element))
+step : List Breakdown.Element -> Parser (Parser.Step (List Breakdown.Element) (List Breakdown.Element))
 step lines =
     let
         finish line next =
@@ -35,7 +35,7 @@ step lines =
             ]
 
 
-list : Parser (List Element)
+list : Parser (List Breakdown.Element)
 list =
     loop [] step
 
@@ -46,17 +46,17 @@ list =
 -- Page starts with 1. (int + fullstop)
 
 
-value : Parser.Parser Breakdown.Element
+value : Parser Breakdown.Element
 value =
     oneOf
         [ locationLine
-        , notLocationLine
+        , ignorableLine
         ]
 
 
-locationLine : Parser.Parser Breakdown.Element
+locationLine : Parser Breakdown.Element
 locationLine =
-    Parser.succeed Location
+    Parser.succeed Breakdown.Location
         |= oneOf
             [ succeed "INT"
                 |. keyword "INT."
@@ -64,12 +64,15 @@ locationLine =
                 |. keyword "EXT."
             ]
         |. spaces
+        -- Todo better time parser sometimes multiple dashes
+        |= zeroOrMore (not << isDash)
+        |. symbol "-"
         |= zeroOrMore (not << isNewLine)
 
 
-notLocationLine : Parser Breakdown.Element
-notLocationLine =
-    Parser.succeed IgnorableLine
+ignorableLine : Parser Breakdown.Element
+ignorableLine =
+    Parser.succeed Breakdown.IgnorableLine
         |. blank (not << isNewLine)
 
 
@@ -84,6 +87,11 @@ blank : (Char -> Bool) -> Parser ()
 blank isOk =
     succeed ()
         |. chompWhile isOk
+
+
+isDash : Char -> Bool
+isDash char =
+    char == '-'
 
 
 isNewLine : Char -> Bool
