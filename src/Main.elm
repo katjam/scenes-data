@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import Breakdown
 import Browser
 import File
 import File.Select
@@ -80,7 +81,7 @@ view model =
                     case screenplayData.lines of
                         Ok result ->
                             result
-                                |> List.map (\loc -> li [] [ text loc ])
+                                |> List.map (\element -> li [] [ text (Breakdown.elementToString element) ])
                                 |> ul []
 
                         Err err ->

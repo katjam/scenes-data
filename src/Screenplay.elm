@@ -1,39 +1,25 @@
 module Screenplay exposing (ScreenplayData, parseScreenplay)
 
+import Breakdown exposing (..)
 import Parser exposing ((|.), (|=), Parser, chompUntil, chompWhile, end, getChompedString, keyword, loop, oneOf, spaces, succeed, symbol)
 
 
 type alias ScreenplayData =
     { title : String
-    , characters : List String
-    , locations : List String
-    , lines : Result (List Parser.DeadEnd) (List String)
+    , lines : Result (List Parser.DeadEnd) (List Element)
     , rawText : String
-    }
-
-
-type IntExt
-    = Int
-    | Ext
-
-
-type alias Location =
-    { intext : IntExt
-    , description : String
     }
 
 
 parseScreenplay : String -> ScreenplayData
 parseScreenplay content =
     { title = "title"
-    , characters = [ "" ]
-    , locations = [ "" ]
     , lines = Parser.run list content
     , rawText = content
     }
 
 
-step : List String -> Parser (Parser.Step (List String) (List String))
+step : List Element -> Parser (Parser.Step (List Element) (List Element))
 step lines =
     let
         finish line next =
@@ -49,7 +35,7 @@ step lines =
             ]
 
 
-list : Parser (List String)
+list : Parser (List Element)
 list =
     loop [] step
 
@@ -60,7 +46,7 @@ list =
 -- Page starts with 1. (int + fullstop)
 
 
-value : Parser.Parser String
+value : Parser.Parser Breakdown.Element
 value =
     oneOf
         [ locationLine
@@ -68,21 +54,23 @@ value =
         ]
 
 
-locationLine : Parser.Parser String
+locationLine : Parser.Parser Breakdown.Element
 locationLine =
-    Parser.succeed identity
-        |. oneOf
-            [ keyword "INT."
-            , keyword "EXT."
+    Parser.succeed Location
+        |= oneOf
+            [ succeed "INT"
+                |. keyword "INT."
+            , succeed "EXT"
+                |. keyword "EXT."
             ]
         |. spaces
         |= zeroOrMore (not << isNewLine)
 
 
-notLocationLine : Parser String
+notLocationLine : Parser Breakdown.Element
 notLocationLine =
-    Parser.succeed identity
-        |= blank (not << isNewLine)
+    Parser.succeed IgnorableLine
+        |. blank (not << isNewLine)
 
 
 zeroOrMore : (Char -> Bool) -> Parser String
@@ -92,9 +80,9 @@ zeroOrMore isOk =
         |> getChompedString
 
 
-blank : (Char -> Bool) -> Parser String
+blank : (Char -> Bool) -> Parser ()
 blank isOk =
-    succeed "not scene heading"
+    succeed ()
         |. chompWhile isOk
 
 
