@@ -26,7 +26,7 @@ step lines =
             next (line :: lines)
     in
     succeed finish
-        |= value
+        |= lineValue
         |= oneOf
             [ succeed Parser.Loop
                 |. symbol "\n"
@@ -46,12 +46,20 @@ list =
 -- Page starts with 1. (int + fullstop)
 
 
-value : Parser Breakdown.Element
-value =
+lineValue : Parser Breakdown.Element
+lineValue =
     oneOf
         [ locationLine
+        , pageNumberLine
         , ignorableLine
         ]
+
+
+pageNumberLine : Parser Breakdown.Element
+pageNumberLine =
+    Parser.succeed Breakdown.PageNumber
+        |= Parser.float
+        |. zeroOrMore (not << isNewLine)
 
 
 locationLine : Parser Breakdown.Element

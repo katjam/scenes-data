@@ -45,7 +45,7 @@ update msg model =
     case msg of
         ScreenplayRequested ->
             ( model
-            , File.Select.file [ "text/csv" ] ScreenplaySelected
+            , File.Select.file [ "text/plain" ] ScreenplaySelected
             )
 
         ScreenplaySelected file ->
